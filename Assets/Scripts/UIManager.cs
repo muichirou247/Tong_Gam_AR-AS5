@@ -14,6 +14,9 @@ public class UIManager : MonoBehaviour
     [Header("UI Setup")]
     [SerializeField] private TMP_Text greetingText;
 
+    [SerializeField] private TMP_Text scoreText;
+    [SerializeField] private Image crosshair;
+
     public static event Action OnUIStartButton;
     public static event Action OnUIRestartButton;
     public static event Action OnUIShootButton;
@@ -28,6 +31,8 @@ public class UIManager : MonoBehaviour
 
         restartButton.gameObject.SetActive(false);
         shootButton.gameObject.SetActive(false);
+        crosshair.gameObject.SetActive(false);
+        scoreText.gameObject.SetActive(false);
     }
 
     void StartButtonPressed()
@@ -37,6 +42,9 @@ public class UIManager : MonoBehaviour
         startButton.gameObject.SetActive(false);
         restartButton.gameObject.SetActive(true);
         shootButton.gameObject.SetActive(true);
+
+        scoreText.gameObject.SetActive(true);
+        crosshair.gameObject.SetActive(true);
     }
 
     void RestartButtonPressed()
@@ -46,7 +54,18 @@ public class UIManager : MonoBehaviour
         startButton.gameObject.SetActive(true);
         restartButton.gameObject.SetActive(false);
         shootButton.gameObject.SetActive(false);
+
+        crosshair.gameObject?.SetActive(false);
+        scoreText.gameObject.SetActive(false);
     }
 
-    void ShootButtonPressed() { }
+    void ShootButtonPressed() 
+    { 
+        OnUIShootButton?.Invoke();
+    }
+
+    public void UpdateScore(int score)
+    {
+        scoreText.text = $"Score: {score}";
+    }
 }
