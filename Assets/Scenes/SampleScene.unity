@@ -321,7 +321,7 @@ MonoBehaviour:
   arSession: {fileID: 862101778}
   planeManager: {fileID: 772976714}
   uiManager: {fileID: 1042394083}
-  enemyPrefab: {fileID: 5011658832183960392, guid: 67e00c09814db0341a86adcac90c8896, type: 3}
+  enemyPrefab: {fileID: 4384967035215718559, guid: f931561a3fa779749b16a91ce0c9d936, type: 3}
   enemyCount: 2
   spawnRate: 2
   deSpawnRate: 4
