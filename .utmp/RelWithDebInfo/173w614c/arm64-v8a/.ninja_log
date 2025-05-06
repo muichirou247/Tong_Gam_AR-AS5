@@ -1,0 +1,10 @@
+# ninja log v5
+22	1907	7655707674832546	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	3937e8638a0c751d
+1	1928	7655707675340294	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	6288581612fa9d2
+42	1977	7655707675401002	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	59b7ae9c5a84dbf2
+70	2128	7655707677549906	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	cd75a4cd295b8975
+56	2130	7655707676512230	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	8073ac65fa139152
+8	2243	7655707678840246	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	83f4db265196aa95
+31	2464	7655707681198131	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	4a28d7703ef8cd68
+15	2665	7655707683065994	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	e596d25825ca2426
+2665	2911	7655707684890335	C:/Users/tongc/Documents/GitHub/Tong_Gam_AR-AS5/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/173w614c/obj/arm64-v8a/libgame.so	b5804a021b414b93
