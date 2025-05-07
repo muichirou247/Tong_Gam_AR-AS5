@@ -3,6 +3,9 @@ using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using System.Collections.Generic;
+using System.Collections;
+using UnityEngine.SceneManagement;
+using UnityEditor;
 
 public class BambooManager : MonoBehaviour
 {
@@ -30,18 +33,24 @@ public class BambooManager : MonoBehaviour
     private GameObject[] spawnedBamboos;
     private GameObject spawnedPanda;
 
+    [Header("Game Over UI")]
+    public GameObject gameOverPanel;
+    public float gameOverDelay = 3f;
+
+
     void Start()
     {
         currentTime = timeLimit;
         SpawnBamboos();
         UpdateScoreUI();
+        gameOverPanel.SetActive(false);
     
     }
 
     void Update()
     {
         HandlePandaSpawnAndMove();
-        HandleTimer();
+        HandleTimer();       
     }
 
     // === 🐼 แพนด้าเดินตาม Reticle ===
@@ -88,10 +97,7 @@ public class BambooManager : MonoBehaviour
 
         if (currentTime <= 0)
         {
-            SpawnBamboos();
-            currentTime = timeLimit;
-            collectedBamboos = 0;
-            UpdateScoreUI();
+            StartCoroutine(HandleGameOver());
         }
     }
 
@@ -132,8 +138,6 @@ public class BambooManager : MonoBehaviour
         bambooCount = Mathf.Max(1, 5 - collectedBamboos);
     }
 
-
-
     // === ✅ เรียกเมื่อชนไม้ไผ่ ===
     public void CollectBamboo(GameObject bamboo)
     {
@@ -157,4 +161,26 @@ public class BambooManager : MonoBehaviour
             scoreText.text = "Score: " + collectedBamboos;
         }
     }
+
+    public ARSession arSession;
+
+    private IEnumerator HandleGameOver()
+    {
+        if (timerText != null)
+            timerText.text = "YOU LOSE";
+
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true);
+
+        Time.timeScale = 0f; // ⛔ หยุดเกมทั้งหมด
+
+        yield return new WaitForSecondsRealtime(gameOverDelay); // ต้องใช้ Realtime เพราะ Time.timeScale = 0
+
+        Time.timeScale = 1f; // ✅ คืนค่าปกติก่อนโหลดใหม่
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+
+
 }

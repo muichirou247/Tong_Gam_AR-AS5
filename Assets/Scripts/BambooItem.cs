@@ -8,7 +8,7 @@ public class BambooObject : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            manager.CollectBamboo(this.gameObject);
+            manager.CollectBamboo(gameObject);
         }
     }
 }
