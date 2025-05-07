@@ -3,9 +3,6 @@ using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using System.Collections.Generic;
-using System.Collections;
-using UnityEngine.SceneManagement;
-using UnityEditor;
 
 public class BambooManager : MonoBehaviour
 {
@@ -23,37 +20,145 @@ public class BambooManager : MonoBehaviour
     public Text scoreText;
 
     [Header("Game Settings")]
-    public float timeLimit = 10f;
     public float pandaMoveSpeed = 1.0f;
+    public int bambooPerSpawn = 5;
+    public float bambooSpawnInterval = 10f;
+    public int maxBambooToCollect = 30;
+    public float normalSpeed = 1.0f;
+    public float boostSpeed = 3.0f;
 
-    private float currentTime;
     private int collectedBamboos = 0;
-    private int bambooCount = 5;
+    public float elapsedTime = 0f;
+    private float spawnTimer = 0f;
+
+    [Header("Stamina Settings")]
+    public float maxStamina = 100f;
+    public float currentStamina;
+    public float staminaDrainRate = 15f;   
+    public float staminaRegenRate = 10f;   
+    public float minStaminaToBoost = 10f;
+
+    public Slider staminaSlider;
 
     private GameObject[] spawnedBamboos;
     private GameObject spawnedPanda;
 
-    [Header("Game Over UI")]
-    public GameObject gameOverPanel;
-    public float gameOverDelay = 3f;
-
-
     void Start()
     {
-        currentTime = timeLimit;
         SpawnBamboos();
         UpdateScoreUI();
-        gameOverPanel.SetActive(false);
-    
+        currentStamina = maxStamina;
+        if (staminaSlider != null) staminaSlider.maxValue = maxStamina;
     }
 
     void Update()
     {
         HandlePandaSpawnAndMove();
-        HandleTimer();       
+        UpdateTimer();
+        HandleBambooRespawn();
+        UpdatePandaSpeed();
+        
     }
 
-    // === 🐼 แพนด้าเดินตาม Reticle ===
+    private void UpdateTimer()
+    {
+        elapsedTime -= Time.deltaTime;
+        spawnTimer += Time.deltaTime;
+
+        if (timerText != null)
+        {
+            timerText.text = "Time: " + elapsedTime.ToString("F1") + "s";
+        }
+    }
+
+    private void HandleBambooRespawn()
+    {
+        if (spawnTimer >= bambooSpawnInterval)
+        {
+            RemoveAllBamboos();
+            if (collectedBamboos < maxBambooToCollect)
+            {
+                SpawnBamboos();
+            }
+            spawnTimer = 0f;
+        }
+    }
+
+    private void RemoveAllBamboos()
+    {
+        if (spawnedBamboos != null)
+        {
+            foreach (var bamboo in spawnedBamboos)
+            {
+                if (bamboo != null)
+                    Destroy(bamboo);
+            }
+        }
+    }
+
+    private void SpawnBamboos()
+    {
+        spawnedBamboos = new GameObject[bambooPerSpawn];
+        List<ARPlane> planes = new List<ARPlane>();
+
+        foreach (var plane in planeManager.trackables)
+        {
+            planes.Add(plane);
+        }
+
+        for (int i = 0; i < bambooPerSpawn; i++)
+        {
+            if (planes.Count == 0) break;
+
+            ARPlane plane = planes[Random.Range(0, planes.Count)];
+            Vector2 randomInPlane = Random.insideUnitCircle * 0.5f * plane.size.x;
+            Vector3 randomPoint = plane.center + new Vector3(randomInPlane.x, 0, randomInPlane.y);
+            List<ARRaycastHit> hits = new List<ARRaycastHit>();
+            Vector3 rayOrigin = randomPoint + Vector3.up * 1.5f;
+
+            if (raycastManager.Raycast(new Ray(rayOrigin, Vector3.down), hits, TrackableType.PlaneWithinBounds))
+            {
+                Pose hitPose = hits[0].pose;
+                GameObject bamboo = Instantiate(bambooPrefab, hitPose.position, Quaternion.identity);
+
+                BambooObject bambooObj = bamboo.AddComponent<BambooObject>();
+                bambooObj.manager = this;
+
+                spawnedBamboos[i] = bamboo;
+            }
+        }
+    }
+
+    public void CollectBamboo(GameObject bamboo)
+    {
+        for (int i = 0; i < spawnedBamboos.Length; i++)
+        {
+            if (spawnedBamboos[i] == bamboo)
+            {
+                Destroy(bamboo);
+                spawnedBamboos[i] = null;
+                collectedBamboos++;
+                UpdateScoreUI();
+                break;
+            }
+        }
+
+        if (collectedBamboos >= maxBambooToCollect)
+        {
+            Debug.Log("🎉 You collected all the bamboos!");
+            RemoveAllBamboos();
+            // เพิ่มระบบแสดงชัยชนะได้ที่นี่
+        }
+    }
+
+    private void UpdateScoreUI()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = "Score: " + collectedBamboos + " / " + maxBambooToCollect;
+        }
+    }
+
     private void HandlePandaSpawnAndMove()
     {
         if (spawnedPanda == null && WasTapped() && reticle.CurrentPlane != null)
@@ -83,104 +188,24 @@ public class BambooManager : MonoBehaviour
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) return true;
         return false;
     }
-
-    // === 🕒 จัดการเวลา ===
-    private void HandleTimer()
+    private void UpdatePandaSpeed()
     {
-        currentTime -= Time.deltaTime;
-        currentTime = Mathf.Max(0, currentTime);
-
-        if (timerText != null)
+        if (Input.GetMouseButton(0) && currentStamina > minStaminaToBoost)
         {
-            timerText.text = "Time Left: " + currentTime.ToString("F1") + "s";
+            pandaMoveSpeed = boostSpeed;
+            currentStamina -= staminaDrainRate * Time.deltaTime;
+        }
+        else
+        {
+            pandaMoveSpeed = normalSpeed;
+            currentStamina += staminaRegenRate * Time.deltaTime;
         }
 
-        if (currentTime <= 0)
-        {
-            StartCoroutine(HandleGameOver());
-        }
+        currentStamina = Mathf.Clamp(currentStamina, 0f, maxStamina);
+
+        if (staminaSlider != null)
+            staminaSlider.value = currentStamina;
     }
-
-    // === 🎋 Spawn ไม้ไผ่ ===
-    private void SpawnBamboos()
-    {
-        spawnedBamboos = new GameObject[bambooCount];
-
-        // ✅ แก้ไขตรงนี้
-        List<ARPlane> planes = new List<ARPlane>();
-        foreach (var plane in planeManager.trackables)
-        {
-            planes.Add(plane);
-        }
-
-        for (int i = 0; i < bambooCount; i++)
-        {
-            if (planes.Count == 0) break;
-
-            ARPlane plane = planes[Random.Range(0, planes.Count)];
-            Vector2 randomInPlane = Random.insideUnitCircle * 0.5f * plane.size.x;
-            Vector3 randomPoint = plane.center + new Vector3(randomInPlane.x, 0, randomInPlane.y);
-            List<ARRaycastHit> hits = new List<ARRaycastHit>();
-            Vector3 rayOrigin = randomPoint + Vector3.up * 1.5f;
-
-            if (raycastManager.Raycast(new Ray(rayOrigin, Vector3.down), hits, TrackableType.PlaneWithinBounds))
-            {
-                Pose hitPose = hits[0].pose;
-                GameObject bamboo = Instantiate(bambooPrefab, hitPose.position, Quaternion.identity);
-
-                BambooObject bambooObj = bamboo.AddComponent<BambooObject>();
-                bambooObj.manager = this;
-
-                spawnedBamboos[i] = bamboo;
-            }
-        }
-
-        bambooCount = Mathf.Max(1, 5 - collectedBamboos);
-    }
-
-    // === ✅ เรียกเมื่อชนไม้ไผ่ ===
-    public void CollectBamboo(GameObject bamboo)
-    {
-        for (int i = 0; i < spawnedBamboos.Length; i++)
-        {
-            if (spawnedBamboos[i] == bamboo)
-            {
-                Destroy(bamboo);
-                spawnedBamboos[i] = null;
-                collectedBamboos++;
-                UpdateScoreUI();
-                break;
-            }
-        }
-    }
-
-    private void UpdateScoreUI()
-    {
-        if (scoreText != null)
-        {
-            scoreText.text = "Score: " + collectedBamboos;
-        }
-    }
-
-    public ARSession arSession;
-
-    private IEnumerator HandleGameOver()
-    {
-        if (timerText != null)
-            timerText.text = "YOU LOSE";
-
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(true);
-
-        Time.timeScale = 0f; // ⛔ หยุดเกมทั้งหมด
-
-        yield return new WaitForSecondsRealtime(gameOverDelay); // ต้องใช้ Realtime เพราะ Time.timeScale = 0
-
-        Time.timeScale = 1f; // ✅ คืนค่าปกติก่อนโหลดใหม่
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-
 
 
 }
