@@ -24,6 +24,8 @@ public class PackageSpawner : MonoBehaviour
     public DrivingSurfaceManager DrivingSurfaceManager;
     public PackageBehaviour Package;
     public GameObject PackagePrefab;
+    
+  
 
     public static Vector3 RandomInTriangle(Vector3 v1, Vector3 v2)
     {

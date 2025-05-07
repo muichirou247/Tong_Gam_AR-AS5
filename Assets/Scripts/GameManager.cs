@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private ARSession arSession;
     [SerializeField] private ARPlaneManager planeManager;
-    [SerializeField] private UIManager uiManager;
+
     [SerializeField] private GameObject enemyPrefab;
 
     [Header("Enemy Settings")]
@@ -27,8 +27,7 @@ public class GameManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        UIManager.OnUIStartButton += StartGame;
-        UIManager.OnUIRestartButton += RestartGame;
+
     }
 
     void StartGame()
@@ -46,7 +45,7 @@ public class GameManager : MonoBehaviour
             if (lineVisual) lineVisual.enabled = false;
         }
 
-        StartCoroutine(SpawnEnemies());
+        
     }
 
     void RestartGame()
@@ -72,56 +71,48 @@ public class GameManager : MonoBehaviour
         var enemy = Instantiate(enemyPrefab, randomPlanePosition, Quaternion.identity);
         _spawnedEnemies.Add(enemy);
 
-        var enemyScripts = enemy.GetComponentInChildren<Enemy>();
-        if (enemyScripts != null)
 
+
+        Vector3 GetRandomPosition(ARPlane plane)
         {
-            enemyScripts.OnEnemyDestroyed += AddScore;
+            var center = plane.center;
+            var size = plane.size * 0.35f;
+            var randomX = Random.Range(-size.x, size.x);
+
+            var randomZ = Random.Range(-size.y, size.y);
+
+
+            return new Vector3(center.x + randomX, center.y, center.z + randomZ);
         }
 
-        StartCoroutine(DeSpawnEnemies(enemy));
-    }
-
-    Vector3 GetRandomPosition(ARPlane plane)
-    {
-         var center = plane.center;
-         var size = plane.size * 0.35f;
-         var randomX = Random.Range(-size.x, size.x);
-
-         var randomZ = Random.Range(-size.y, size.y);
-         
-        
-         return new Vector3(center.x + randomX,center.y, center.z + randomZ);
-    }
-
-    IEnumerator SpawnEnemies()
-    {
-        while (_gameStarted)
+        IEnumerator SpawnEnemies()
         {
-            if (_spawnedEnemies.Count < enemyCount)
+            while (_gameStarted)
             {
-                SpawnEnemy();
+                if (_spawnedEnemies.Count < enemyCount)
+                {
+                    SpawnEnemy();
+                }
+
+                yield return new WaitForSeconds(spawnRate);
             }
-
-            yield return new WaitForSeconds(spawnRate);
         }
-    }
 
-    IEnumerator DeSpawnEnemies(GameObject enemy)
-    {
-        yield return new WaitForSeconds(deSpawnRate);
-
-        if (_spawnedEnemies.Contains(enemy))
+        IEnumerator DeSpawnEnemies(GameObject enemy)
         {
-            _spawnedEnemies.Remove(enemy);
-            Destroy(enemy);
-        }
-    }
+            yield return new WaitForSeconds(deSpawnRate);
 
-    void AddScore()
-    {
-        _score++;
-        uiManager.UpdateScore(_score);
-        
+            if (_spawnedEnemies.Contains(enemy))
+            {
+                _spawnedEnemies.Remove(enemy);
+                Destroy(enemy);
+            }
+        }
+
+        void AddScore()
+        {
+
+
+        }
     }
 }
