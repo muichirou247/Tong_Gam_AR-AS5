@@ -37,6 +37,8 @@ public class BambooManager : MonoBehaviour
     public float staminaDrainRate = 15f;   
     public float staminaRegenRate = 10f;   
     public float minStaminaToBoost = 10f;
+    private bool isBoosting = false;
+    private bool isRecovering = false;
 
     public Slider staminaSlider;
 
@@ -55,9 +57,9 @@ public class BambooManager : MonoBehaviour
     {
         HandlePandaSpawnAndMove();
         UpdateTimer();
-        HandleBambooRespawn();
-        UpdatePandaSpeed();
-        
+        HandleBambooRespawn();       
+        UpdateStamina();
+
     }
 
     private void UpdateTimer()
@@ -171,7 +173,9 @@ public class BambooManager : MonoBehaviour
         {
             Vector3 targetPosition = reticle.transform.position;
             Vector3 currentPosition = spawnedPanda.transform.position;
-            spawnedPanda.transform.position = Vector3.MoveTowards(currentPosition, targetPosition, pandaMoveSpeed * Time.deltaTime);
+            float speed = isBoosting ? boostSpeed : normalSpeed;
+            spawnedPanda.transform.position = Vector3.MoveTowards(currentPosition, targetPosition, speed * Time.deltaTime);
+
 
             Vector3 direction = (targetPosition - currentPosition).normalized;
             if (direction != Vector3.zero)
@@ -188,24 +192,47 @@ public class BambooManager : MonoBehaviour
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) return true;
         return false;
     }
-    private void UpdatePandaSpeed()
+     
+    private void UpdateStamina()
     {
-        if (Input.GetMouseButton(0) && currentStamina > minStaminaToBoost)
+        bool isPressing = Input.GetMouseButton(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Stationary);
+
+        if (isPressing && !isRecovering)
         {
-            pandaMoveSpeed = boostSpeed;
-            currentStamina -= staminaDrainRate * Time.deltaTime;
+            isBoosting = true;
         }
         else
         {
-            pandaMoveSpeed = normalSpeed;
-            currentStamina += staminaRegenRate * Time.deltaTime;
+            isBoosting = false;
         }
 
-        currentStamina = Mathf.Clamp(currentStamina, 0f, maxStamina);
+        if (isBoosting)
+        {
+            currentStamina -= staminaDrainRate * Time.deltaTime;
+
+            if (currentStamina <= 0)
+            {
+                currentStamina = 0;
+                isRecovering = true;
+                isBoosting = false;
+            }
+        }
+        else if (currentStamina < maxStamina)
+        {
+            currentStamina += staminaRegenRate * Time.deltaTime;
+
+            if (currentStamina >= maxStamina)
+            {
+                currentStamina = maxStamina;
+                isRecovering = false;
+            }
+        }
 
         if (staminaSlider != null)
+        {
             staminaSlider.value = currentStamina;
+        }
     }
 
-
 }
+
