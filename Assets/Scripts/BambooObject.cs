@@ -5,8 +5,10 @@ public class BambooObject : MonoBehaviour
 {
     public BambooManager manager;
 
-    public AudioClip collectSound; // ใส่เสียงเก็บถ้ามี
-    public GameObject collectEffect; // ใส่พาร์ติเคิลถ้ามี
+    public AudioClip collectSound; 
+    public GameObject collectEffect; 
+    public GameObject redDot; 
+
 
     private bool isCollected = false;
 
@@ -55,4 +57,5 @@ public class BambooObject : MonoBehaviour
 
         Destroy(gameObject); // ลบหลังจากกระพริบเสร็จ
     }
+
 }

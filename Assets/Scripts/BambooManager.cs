@@ -4,7 +4,8 @@ using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using System.Collections.Generic;
 
-public class BambooManager : MonoBehaviour
+
+public class BambooManager: MonoBehaviour
 {
     [Header("AR Components")]
     public ARRaycastManager raycastManager;
@@ -34,8 +35,8 @@ public class BambooManager : MonoBehaviour
     [Header("Stamina Settings")]
     public float maxStamina = 100f;
     public float currentStamina;
-    public float staminaDrainRate = 15f;   
-    public float staminaRegenRate = 10f;   
+    public float staminaDrainRate = 15f;
+    public float staminaRegenRate = 10f;
     public float minStaminaToBoost = 10f;
     private bool isBoosting = false;
     private bool isRecovering = false;
@@ -44,6 +45,9 @@ public class BambooManager : MonoBehaviour
 
     private GameObject[] spawnedBamboos;
     private GameObject spawnedPanda;
+
+    [Header("Map")]
+    public BambooMapmaker mapmaker;
 
     void Start()
     {
@@ -57,7 +61,7 @@ public class BambooManager : MonoBehaviour
     {
         HandlePandaSpawnAndMove();
         UpdateTimer();
-        HandleBambooRespawn();       
+        HandleBambooRespawn();
         UpdateStamina();
 
     }
@@ -102,7 +106,7 @@ public class BambooManager : MonoBehaviour
     {
         spawnedBamboos = new GameObject[bambooPerSpawn];
         List<ARPlane> planes = new List<ARPlane>();
-
+        
         foreach (var plane in planeManager.trackables)
         {
             planes.Add(plane);
@@ -118,42 +122,57 @@ public class BambooManager : MonoBehaviour
             List<ARRaycastHit> hits = new List<ARRaycastHit>();
             Vector3 rayOrigin = randomPoint + Vector3.up * 1.5f;
 
-            if (raycastManager.Raycast(new Ray(rayOrigin, Vector3.down), hits, TrackableType.PlaneWithinBounds))
+            if (raycastManager.Raycast(new Ray(rayOrigin, Vector3.down), hits, TrackableType.PlaneWithinBounds) && hits.Count > 0)
             {
                 Pose hitPose = hits[0].pose;
                 GameObject bamboo = Instantiate(bambooPrefab, hitPose.position, Quaternion.identity);
 
+                GameObject redDot = null;
+                if (mapmaker != null)
+                {
+                    mapmaker.PlaceRedDotOnMap(bamboo.transform.position);
+                    redDot = mapmaker.GetLastRedDot(); // ได้ red dot ล่าสุด
+                }
+
                 BambooObject bambooObj = bamboo.AddComponent<BambooObject>();
                 bambooObj.manager = this;
+                bambooObj.redDot = redDot;
 
                 spawnedBamboos[i] = bamboo;
+
+                
             }
         }
-    }
-
-    public void CollectBamboo(GameObject bamboo)
-    {
-        for (int i = 0; i < spawnedBamboos.Length; i++)
+  }  
+                public void CollectBamboo(GameObject bamboo)
         {
-            if (spawnedBamboos[i] == bamboo)
+            for (int i = 0; i < spawnedBamboos.Length; i++)
             {
-                Destroy(bamboo);
-                spawnedBamboos[i] = null;
-                collectedBamboos++;
-                UpdateScoreUI();
-                break;
+                if (spawnedBamboos[i] == bamboo)
+                {
+                    
+                    BambooObject bambooObj = bamboo.GetComponent<BambooObject>();
+                    if (bambooObj != null && bambooObj.redDot != null)
+                    {
+                        Destroy(bambooObj.redDot);
+                    }
+
+                    Destroy(bamboo);
+                    spawnedBamboos[i] = null;
+                    collectedBamboos++;
+                    UpdateScoreUI();
+                    break;
+                }
             }
-        }
 
-        if (collectedBamboos >= maxBambooToCollect)
-        {
-            Debug.Log("🎉 You collected all the bamboos!");
-            RemoveAllBamboos();
-            // เพิ่มระบบแสดงชัยชนะได้ที่นี่
-        }
-    }
+            if (collectedBamboos >= maxBambooToCollect)
+            {
+                Debug.Log("🎉 You collected all the bamboos!");
+                RemoveAllBamboos();
+            }
+}
 
-    private void UpdateScoreUI()
+private void UpdateScoreUI()
     {
         if (scoreText != null)
         {
@@ -186,15 +205,15 @@ public class BambooManager : MonoBehaviour
         }
     }
 
-    private bool WasTapped()
-    {
+        private bool WasTapped()
+        {
         if (Input.GetMouseButtonDown(0)) return true;
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) return true;
         return false;
-    }
-     
-    private void UpdateStamina()
-    {
+        }
+
+        private void UpdateStamina()
+        {
         bool isPressing = Input.GetMouseButton(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Stationary);
 
         if (isPressing && !isRecovering)
@@ -235,4 +254,3 @@ public class BambooManager : MonoBehaviour
     }
 
 }
-
