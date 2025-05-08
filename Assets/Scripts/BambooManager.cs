@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 
 public class BambooManager: MonoBehaviour
@@ -49,6 +51,9 @@ public class BambooManager: MonoBehaviour
     [Header("Map")]
     public BambooMapmaker mapmaker;
 
+    [Header("Win UI")]
+    public GameObject winTextUI;
+
     void Start()
     {
         SpawnBamboos();
@@ -66,7 +71,7 @@ public class BambooManager: MonoBehaviour
 
     }
 
-    private void UpdateTimer()
+    private void UpdateTimer() //อัปเดตเวลาในเกม
     {
         elapsedTime -= Time.deltaTime;
         spawnTimer += Time.deltaTime;
@@ -76,8 +81,8 @@ public class BambooManager: MonoBehaviour
             timerText.text = "Time: " + elapsedTime.ToString("F1") + "s";
         }
     }
-
-    private void HandleBambooRespawn()
+        
+    private void HandleBambooRespawn() //Respawn ไผ่แต่ละรอบ ทุก ๆ 5 วิ
     {
         if (spawnTimer >= bambooSpawnInterval)
         {
@@ -90,7 +95,7 @@ public class BambooManager: MonoBehaviour
         }
     }
 
-    private void RemoveAllBamboos()
+    private void RemoveAllBamboos() //ลบไผ่ทุกอันในเกม
     {
         if (spawnedBamboos != null)
         {
@@ -102,7 +107,7 @@ public class BambooManager: MonoBehaviour
         }
     }
 
-    private void SpawnBamboos()
+    private void SpawnBamboos() //Spawm ไผ่่แบบสุ่มในระยะการมองเห็น
     {
         spawnedBamboos = new GameObject[bambooPerSpawn];
         List<ARPlane> planes = new List<ARPlane>();
@@ -144,7 +149,7 @@ public class BambooManager: MonoBehaviour
             }
         }
   }  
-                public void CollectBamboo(GameObject bamboo)
+                public void CollectBamboo(GameObject bamboo) //เก็บไผ่ 
         {
             for (int i = 0; i < spawnedBamboos.Length; i++)
             {
@@ -166,22 +171,25 @@ public class BambooManager: MonoBehaviour
             }
 
             if (collectedBamboos >= maxBambooToCollect)
-            {
-                Debug.Log("🎉 You collected all the bamboos!");
+            {                
                 RemoveAllBamboos();
-            }
+                if (winTextUI != null)
+                winTextUI.SetActive(true);
+
+                StartCoroutine(ShowWinThenGoToCredits());
+        }
 }
 
-private void UpdateScoreUI()
+            private void UpdateScoreUI() //อัปเดตสกอร์
     {
         if (scoreText != null)
         {
             scoreText.text = "Score: " + collectedBamboos + " / " + maxBambooToCollect;
         }
-    }
+            }
 
-    private void HandlePandaSpawnAndMove()
-    {
+        private void HandlePandaSpawnAndMove() //Spawn แพนด้าแดงออกมา
+        {
         if (spawnedPanda == null && WasTapped() && reticle.CurrentPlane != null)
         {
             spawnedPanda = Instantiate(redPandaPrefab, reticle.transform.position, Quaternion.identity);
@@ -203,16 +211,15 @@ private void UpdateScoreUI()
                 spawnedPanda.transform.rotation = Quaternion.Slerp(spawnedPanda.transform.rotation, targetRotation, Time.deltaTime * 5f);
             }
         }
-    }
+        }
 
-        private bool WasTapped()
+        private bool WasTapped() //บังคับการเดินแพนด้าแดง
         {
         if (Input.GetMouseButtonDown(0)) return true;
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) return true;
         return false;
         }
-
-        private void UpdateStamina()
+        private void UpdateStamina() //อัปเดต Stamina บูส
         {
         bool isPressing = Input.GetMouseButton(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Stationary);
 
@@ -251,6 +258,12 @@ private void UpdateScoreUI()
         {
             staminaSlider.value = currentStamina;
         }
-    }
+        }
+    
+        private IEnumerator ShowWinThenGoToCredits()
+        {
+        yield return new WaitForSeconds(4f);  
+        SceneManager.LoadScene("Credit");  
+        }
 
 }

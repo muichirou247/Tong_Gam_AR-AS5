@@ -12,7 +12,7 @@ public class BambooObject : MonoBehaviour
 
     private bool isCollected = false;
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other) //เช็คการชนผู้เล่นกับไผ่
     {
         if (isCollected) return;
 
@@ -23,7 +23,7 @@ public class BambooObject : MonoBehaviour
         }
     }
 
-    private IEnumerator CollectWithEffect()
+    private IEnumerator CollectWithEffect() //ชนแล้วให้มีการกระพริบละเก็บ
     {
         Renderer[] renderers = GetComponentsInChildren<Renderer>();
         int flashCount = 5;
@@ -37,25 +37,19 @@ public class BambooObject : MonoBehaviour
             yield return new WaitForSeconds(flashInterval);
         }
 
-        // เล่นเสียงถ้ามี
-        if (collectSound != null)
+        
+        if (collectSound != null) //เล่นเสียง
         {
             AudioSource.PlayClipAtPoint(collectSound, transform.position);
         }
 
-        // สร้างพาร์ติเคิลถ้ามี
-        if (collectEffect != null)
-        {
-            Instantiate(collectEffect, transform.position, Quaternion.identity);
-        }
-
-        // อัปเดตคะแนนผ่าน manager
-        if (manager != null)
+                
+        if (manager != null) //เก็บไผ่และอัปเดตสกอร์
         {
             manager.CollectBamboo(gameObject);
         }
 
-        Destroy(gameObject); // ลบหลังจากกระพริบเสร็จ
+        Destroy(gameObject); // ลบไผ่หลังจากกระพริบเสร็จ
     }
 
 }
