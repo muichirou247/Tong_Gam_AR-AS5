@@ -57,6 +57,12 @@ public class BambooManager : MonoBehaviour
     [Header("Win UI")]
     public GameObject winTextUI;
 
+    [Header("Audio")]
+    public AudioClip timeItemCollectSound;
+    public AudioClip walkingClip;
+    public AudioClip runningClip;
+    private AudioSource audioSource;
+    private AudioSource footstepSource;
     void Start()
     {
         SpawnBamboos();
@@ -64,6 +70,9 @@ public class BambooManager : MonoBehaviour
         UpdateScoreUI();
         currentStamina = maxStamina;
         if (staminaSlider != null) staminaSlider.maxValue = maxStamina;
+        audioSource = gameObject.AddComponent<AudioSource>();
+        footstepSource = gameObject.AddComponent<AudioSource>();
+        footstepSource.loop = true; // ให้เล่นวน
     }
 
     void Update()
@@ -72,6 +81,7 @@ public class BambooManager : MonoBehaviour
         UpdateTimer();
         HandleBambooRespawn();
         UpdateStamina();
+        UpdateFootstepAudio();
     }
 
     private void UpdateTimer()
@@ -258,6 +268,10 @@ public class BambooManager : MonoBehaviour
 
                 elapsedTime += timeBonusAmount;
                 Debug.Log("Collected time item! Added " + timeBonusAmount + " seconds.");
+                if (timeItemCollectSound != null && audioSource != null)
+                {
+                    audioSource.PlayOneShot(timeItemCollectSound);
+                }
                 return;
             }
         }
@@ -350,5 +364,31 @@ public class BambooManager : MonoBehaviour
     {
         yield return new WaitForSeconds(4f);
         SceneManager.LoadScene("Credit");
+    }
+    private void UpdateFootstepAudio()
+    {
+        if (spawnedPanda == null) return;
+
+        float distance = Vector3.Distance(spawnedPanda.transform.position, reticle.transform.position);
+
+        // ถ้ากำลังเคลื่อนไหว
+        if (distance > 0.05f)
+        {
+            AudioClip clipToPlay = isBoosting ? runningClip : walkingClip;
+
+            if (footstepSource.clip != clipToPlay)
+            {
+                footstepSource.clip = clipToPlay;
+                footstepSource.Play();
+            }
+        }
+        else
+        {
+            // หยุดเดิน หยุดเสียง
+            if (footstepSource.isPlaying)
+            {
+                footstepSource.Stop();
+            }
+        }
     }
 }

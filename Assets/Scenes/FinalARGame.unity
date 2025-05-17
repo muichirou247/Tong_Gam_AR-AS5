@@ -649,6 +649,9 @@ MonoBehaviour:
   staminaSlider: {fileID: 392441504}
   mapmaker: {fileID: 0}
   winTextUI: {fileID: 1434874773}
+  timeItemCollectSound: {fileID: 8300000, guid: b1c04622e7d28ef4d9100a7783fd6933, type: 3}
+  walkingClip: {fileID: 8300000, guid: b3583df317f1fb144aa0dd9348e44a30, type: 3}
+  runningClip: {fileID: 8300000, guid: 6da4164b772deff4ea8f28c5d01de037, type: 3}
 --- !u!4 &523568710
 Transform:
   m_ObjectHideFlags: 0
