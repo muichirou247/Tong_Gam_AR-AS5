@@ -628,16 +628,19 @@ MonoBehaviour:
   planeManager: {fileID: 772976714}
   bambooPrefab: {fileID: 8609221056835356804, guid: 8226f05684648f74691eab54a61c76ba, type: 3}
   redPandaPrefab: {fileID: 4816512022433460124, guid: cd4ac5220e452d947a73bcfa32d77700, type: 3}
+  timeItemPrefab: {fileID: 993881967152648356, guid: 3dadba82dc3a40844bc6a15e0ce313d8, type: 3}
   reticle: {fileID: 1886872026}
   timerText: {fileID: 1766184266}
   scoreText: {fileID: 1360640077}
   pandaMoveSpeed: 1.5
   bambooPerSpawn: 5
+  timeItemPerSpawn: 2
   bambooSpawnInterval: 5
   maxBambooToCollect: 30
   normalSpeed: 1.5
   boostSpeed: 3
-  elapsedTime: 300
+  timeBonusAmount: 10
+  elapsedTime: 60
   maxStamina: 100
   currentStamina: 0
   staminaDrainRate: 20
